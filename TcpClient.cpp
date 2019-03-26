@@ -110,12 +110,22 @@ ssize_t TcpClient::writen(const void *vptr, size_t n) {
 	}
 	return (n);
 }
-
+/* Read some bytes from a descriptor.
+ * return: -1 error happened
+ *          0 the peer has performed an orderly shutdown
+ * */
 ssize_t TcpClient::read(void *ptr, size_t nbytes) {
 	ssize_t		n;
+again:
+	if ( (n = ::read(m_sock, ptr, nbytes)) == -1){
+		if (errno == EINTR)
+			goto again;		/* and call read() again */
+		else{
+			std::cout << "read error: "<<errno<< std::endl;
+		}
+	} else if (n == 0)
+	    std::cout << "read warn: the peer has performed an orderly shutdown!"<< std::endl;              /* EOF */
 
-	if ( (n = ::read(m_sock, ptr, nbytes)) == -1)
-		std::cout << "read error"<< std::endl;
 	return(n);
 }
 
