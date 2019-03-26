@@ -9,9 +9,9 @@ using namespace std;
 
 void *thread_fun(void *data)
 {
-	sleep(3);
-	TcpClient *my_timers = (TcpClient *)data;
-	my_timers->close();
+	sleep(5);
+	TcpClient *my_TcpClient = (TcpClient *)data;
+	my_TcpClient->close();
 }
 int main(int argc, char **argv) {
 	std::string str("Hello world!");
@@ -22,15 +22,15 @@ int main(int argc, char **argv) {
 	client.write(str.data(),str.length());
 	std::cout<<"write"<<std::endl;
 
-    pthread_t thread_id = 0;
-    pthread_create(&thread_id, NULL, thread_fun, &client);
+	pthread_t thread_id = 0;
+	pthread_create(&thread_id, NULL, thread_fun, &client);
 
 	std::cout<<"read:"<<std::endl;
-//    client.read(buf,sizeof(buf));
+	client.readn(buf,sizeof(buf));
 
-	std::cout<< client.read(buf,sizeof(buf))<<std::endl;
+	std::cout<< buf <<std::endl;
 
-    pthread_join(thread_id,NULL);
+	pthread_join(thread_id,NULL);
 
 	return 0;
 }
