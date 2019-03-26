@@ -9,6 +9,8 @@
 #define TCPCLIENT_H_
 #include<sys/socket.h>
 #include<netinet/in.h>
+#include<linux/sockios.h>
+#include<netinet/tcp.h>
 
 class TcpClient {
 public:
@@ -23,7 +25,12 @@ public:
 	ssize_t writen(const void *, size_t);// nonblocking
 	ssize_t	read(void *, size_t);
 	ssize_t	readn(void *, size_t);
-	void close();
+    void close();
+
+    int set_opt_nodelay();
+    int set_no_sndbuf(int sock);
+    unsigned int occ_buf_size();
+
 private:
     bool is_valid() const
     {

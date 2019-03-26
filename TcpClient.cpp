@@ -12,6 +12,7 @@
 #include <iostream>
 #include <errno.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 
 TcpClient::TcpClient() :
 		m_sock(-1) {
@@ -159,4 +160,61 @@ void TcpClient::close() {
 		::shutdown ( m_sock,SHUT_WR );
 		m_sock = -1;
 	}
+}
+
+
+unsigned int TcpClient::occ_buf_size(){
+    int ret = 0;
+    unsigned int byte_unsent = 0;
+    ret = ioctl(m_sock, SIOCOUTQ, &byte_unsent);
+    if (ret < 0) {
+        std::cout <<"ioctl SIOCOUTQ error"<<std::endl;
+    }
+    return byte_unsent;
+}
+
+int TcpClient::set_opt_nodelay(){
+    int nflag = 1;
+    if (setsockopt(m_sock, IPPROTO_TCP, TCP_NODELAY, (void*)&nflag, sizeof(nflag)) != 0){
+        std::cout << "set tcp nodelay error: "<<strerror (errno)<<std::endl;
+        return -1;
+    }
+
+    int opt = -1;
+    int optLen = sizeof(int);
+    if(getsockopt(m_sock,IPPROTO_TCP, TCP_NODELAY, &opt, (socklen_t *)&optLen) != 0){
+        std::cout <<"get tcp nodelay setting error: "<<strerror (errno)<<std::endl;
+        return -1;
+    }else{
+        std::cout <<"get tcp nodelay setting : "<<opt<<std::endl;
+    }
+
+    return 0;
+}
+
+// 由于操作系统的TCP/IP协议栈限制，有的操作系统不能设置到0,有个默认最小值。
+int  TcpClient::set_no_sndbuf(int sock){
+
+    int nzero1 = 0;
+    if(setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&nzero1, sizeof(nzero1)) != 0){
+        std::cout <<"set sndbuf zero error: "<<strerror (errno)<<std::endl;
+        return -1;
+    }
+
+    int opt = -1;
+    int optLen = sizeof(int);
+    if(getsockopt(sock,SOL_SOCKET, SO_SNDBUF, &opt, (socklen_t *)&optLen) != 0){
+        std::cout << "get tcp SO_SNDBUF setting error: " << strerror (errno)<<std::endl;
+        return -1;
+    }else{
+        std::cout << "get tcp so_sndbuf setting : " <<opt<<std::endl;
+    }
+
+//    int nzero = 0;
+//    if(setsockopt(sock, SOL_SOCKET, SO_SNDBUFFORCE, (char*)&nzero, sizeof(nzero)) != 0){
+//        printf ("set SO_RCVBUFFORCE zero error: %s.\n" , strerror (errno));
+//        return -1;
+//    }
+
+    return 0;
 }
